@@ -21,11 +21,7 @@
  */
 void processline(char* line);
 
-/* Arg Parse the command line to parse
-*/
-
-char** arg_parse(char*line);
-
+char** arg_parse (char* line);
 /* Main entry point.
  * argc    A count of command-line arguments
  * argv    The command-line argument valus
@@ -66,6 +62,7 @@ int main(int argc, const char* argv[]) {
  *
  */
 void processline (char* line) {
+  char** args = arg_parse(line);
 
   const pid_t cpid = fork();
   switch(cpid) {
@@ -76,8 +73,8 @@ void processline (char* line) {
   }
 
   case 0: {
-    execlp(line, line, (char*)(0));
-    perror("execlp");
+    execvp(args[0], args);
+    perror("execvp");
     exit(EXIT_FAILURE);
     break;
   }
@@ -95,14 +92,50 @@ void processline (char* line) {
     break;
   }
   }
+  free(args);
 }
 
+int countArgs (char* line) {
+  int i = 0;
+  int onWhitespace = 1;
+  int countargs = 0;
+  while (line[i] != '\0') {
+    if (line[i] == '\t' || line[i] == ' ') {
+      onWhitespace = 1;
+    }
+    else if (onWhitespace == 1){
+      countargs += 1;
+      onWhitespace = 0;
+    }
+    i++;
+  }
+  return countargs;
+}
 /* Arg Parse the command line to parse
 */
+char** arg_parse (char* line) {
 
-char** arg_parse(char*line) {
-  char** args = malloc (10 * sizeof(char*));
+  int count = countArgs(line);
+  char** args = malloc ((count+1) * sizeof(char*));
 
+  int i = 0;
+  int onWhitespace = 1;
+  int countargs = 0;
+  while (line[i] != '\0') {
+    if (line[i] == '\t' || line[i] == ' ') {
+      if (onWhitespace == 0) {
+        line[i] = '\0';
+      }
+      onWhitespace = 1;
+    }
+    else if (onWhitespace == 1){
+      args[countargs] = &line[i];
+      countargs += 1;
+      onWhitespace = 0;
+    }
+    i++;
+  }
+  args[count]=NULL;
   return args;
 
 }
