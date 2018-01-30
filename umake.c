@@ -65,7 +65,8 @@ int main(int argc, const char* argv[]) {
  *
  */
 void processline (char* line) {
-  char** args = arg_parse(line);
+  int count;
+  char** args = arg_parse(line, &count);
 
   const pid_t cpid = fork();
   switch(cpid) {

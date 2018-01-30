@@ -28,9 +28,10 @@ int countArgs (char* line) {
 returns an array of the commands with each position pointing to the first letter of the command.
 To do this it uses a kind of state machine to tell if it is reading whitespace, or moving from
 white space to characters. */
-char** arg_parse (char* line) {
+char **arg_parse(char *line, int *argcp) {
 
   int count = countArgs(line);
+  *argcp = count;
   char** args = malloc ((count+1) * sizeof(char*));
 
   int i = 0;
