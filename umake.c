@@ -62,7 +62,8 @@ int main(int argc, const char* argv[]) {
 
 
 /* Process Line
- *
+ * given a string line of text, process the arguments using arg_parse
+ and save the count of arguments.
  */
 void processline (char* line) {
   int count;
@@ -71,30 +72,30 @@ void processline (char* line) {
   const pid_t cpid = fork();
   switch(cpid) {
 
-  case -1: {
-    perror("fork");
-    break;
-  }
-
-  case 0: {
-    execvp(args[0], args);
-    perror("execvp");
-    exit(EXIT_FAILURE);
-    break;
-  }
-
-  default: {
-    int   status;
-    const pid_t pid = wait(&status);
-    if(-1 == pid) {
-      perror("wait");
+    case -1: {
+      perror("fork");
+      break;
     }
-    else if (pid != cpid) {
-      fprintf(stderr, "wait: expected process %d, but waited for process %d",
-              cpid, pid);
+
+    case 0: {
+      execvp(args[0], args);
+      perror("execvp");
+      exit(EXIT_FAILURE);
+      break;
     }
-    break;
-  }
+
+    default: {
+      int   status;
+      const pid_t pid = wait(&status);
+      if(-1 == pid) {
+        perror("wait");
+      }
+      else if (pid != cpid) {
+        fprintf(stderr, "wait: expected process %d, but waited for process %d",
+                cpid, pid);
+      }
+      break;
+    }
   }
   free(args);
 }
