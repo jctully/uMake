@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <ctype.h>
 
 /* CONSTANTS */
 
@@ -20,6 +21,9 @@
  * process to execute the line and waits for that process to complete.
  */
 void processline(char* line);
+
+/* Called by processline, takes in a line of commands as a string (char*) and
+returns an array of the commands with each position pointing to the first letter of the command. */
 
 char** arg_parse (char* line);
 /* Main entry point.
@@ -95,12 +99,14 @@ void processline (char* line) {
   free(args);
 }
 
+ /* given a line of commands, the function will return the number of arguments
+ as an int, skipping whitespace*/
 int countArgs (char* line) {
   int i = 0;
   int onWhitespace = 1;
   int countargs = 0;
   while (line[i] != '\0') {
-    if (line[i] == '\t' || line[i] == ' ') {
+    if (isspace(line[i])) {
       onWhitespace = 1;
     }
     else if (onWhitespace == 1){
@@ -112,7 +118,10 @@ int countArgs (char* line) {
   return countargs;
 }
 /* Arg Parse the command line to parse
-*/
+ Called by processline, takes in a line of commands as a string (char*) and
+returns an array of the commands with each position pointing to the first letter of the command.
+To do this it uses a kind of state machine to tell if it is reading whitespace, or moving from
+white space to characters. */
 char** arg_parse (char* line) {
 
   int count = countArgs(line);
@@ -122,7 +131,7 @@ char** arg_parse (char* line) {
   int onWhitespace = 1;
   int countargs = 0;
   while (line[i] != '\0') {
-    if (line[i] == '\t' || line[i] == ' ') {
+    if (isspace(line[i])) {
       if (onWhitespace == 0) {
         line[i] = '\0';
       }
