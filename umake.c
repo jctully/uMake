@@ -3,7 +3,6 @@
  * 09 AUG 2017, Aran Clauson
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -68,6 +67,9 @@ int main(int argc, const char* argv[]) {
 void processline (char* line) {
   int count;
   char** args = arg_parse(line, &count);
+
+  if (count == 0)
+    return;
 
   const pid_t cpid = fork();
   switch(cpid) {
