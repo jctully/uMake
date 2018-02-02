@@ -8,12 +8,16 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "arg_parse.h"
+#include "target.h"
 
 /* CONSTANTS */
 
-
+static void print_name(char* string) {
+  printf("%s\n", string);
+}
 /* PROTOTYPES */
 
 /* Process Line
@@ -41,6 +45,7 @@ int main(int argc, const char* argv[]) {
   char*   line    = NULL;
   ssize_t linelen = getline(&line, &bufsize, makefile);
 
+  target* tempTarg;
   while(-1 != linelen) {
 
     if(line[linelen-1]=='\n') {
@@ -48,13 +53,34 @@ int main(int argc, const char* argv[]) {
       line[linelen] = '\0';
     }
 
-    if(line[0] == '\t')
-      processline(&line[1]);
+    //if for not tab, want to add target
+    if(line[0] != '\t') {
+      if(strchr(line, ':') != NULL) {
+        int count;
+        char** lineArgs = arg_parse(line, &count);
+        char* targName = lineArgs[0];
+        targName[strlen(targName)-1] = 0;
+        //printf("%s\n", targName);
+        tempTarg = new_target(targName);
 
+        for (int i=1; i<count; i++)
+          add_depend_target(tempTarg, lineArgs[i]);
+      }
+
+    }
+
+    if(line[0] == '\t') {
+      //add rules
+      add_rule_target(tempTarg, strdup(line));
+    }
 
     linelen = getline(&line, &bufsize, makefile);
   }
-
+  //execute here
+  for (int i=1; i<argc; i++) {
+    for_each_rule(tempTarg, processline);
+    for_each_rule(tempTarg, print_name);
+  }
   free(line);
   return EXIT_SUCCESS;
 }

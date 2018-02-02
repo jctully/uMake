@@ -91,7 +91,6 @@ void add_rule_target(target* tgt, char* rule) {
 
 void for_each_rule(target* tgt, void(*action)(char*)) {
   printf("for each rule found: ");
-
   stringList list = tgt->rules;
   while(list != NULL) {
     action(list->string);
@@ -108,7 +107,7 @@ void for_each_dependency(target* tgt, void(*action)(char*)) {
   }
 }
 
-void target_test() {
+void target_test() { /*
   target_list list = NULL;
   target* tgt = new_target("target 1");
   target* tgt2 = new_target("target 2");
@@ -119,6 +118,5 @@ void target_test() {
   add_rule_target(tgt, "rule1");
   add_rule_target(tgt, "rule2");
   for_each_rule(tgt, print_name);
-  for_each_dependency(tgt, print_name);
-
+  */
 }
