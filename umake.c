@@ -37,7 +37,7 @@ void processline(char* line);
  * character ('\t') are interpreted as a command and passed to processline minus
  * the leading tab.
  */
-int main(int argc, const char* argv[]) {
+int main(int argc, char* argv[]) {
 
   FILE* makefile = fopen("./uMakefile", "r");
 
@@ -45,7 +45,8 @@ int main(int argc, const char* argv[]) {
   char*   line    = NULL;
   ssize_t linelen = getline(&line, &bufsize, makefile);
 
-  target* tempTarg;
+  target* tempTarg; //will hold last target added
+
   while(-1 != linelen) {
 
     if(line[linelen-1]=='\n') {
@@ -53,33 +54,30 @@ int main(int argc, const char* argv[]) {
       line[linelen] = '\0';
     }
 
-    //if for not tab, want to add target
+    //case where no indent, want to add target to global list, then add in its dependencies
     if(line[0] != '\t') {
-      if(strchr(line, ':') != NULL) {
+      if(strchr(line, ':') != NULL) {//line contains a colon
         int count;
-        char** lineArgs = arg_parse(line, &count);
-        char* targName = lineArgs[0];
-        targName[strlen(targName)-1] = 0;
-        //printf("%s\n", targName);
-        tempTarg = new_target(targName);
+        char* colon = strchr(line, ':');
+        colon[0] = ' '; //strip colon
+        char** lineArgs = arg_parse(line, &count);//split line into array
+        tempTarg = new_target(lineArgs[0]);
 
-        for (int i=1; i<count; i++)
+        for (int i=1; i<count; i++) //add dependencies for rest of line array
           add_depend_target(tempTarg, lineArgs[i]);
       }
-
     }
 
+    //case of tab character, want to add rules to the last target's list
     if(line[0] == '\t') {
-      //add rules
       add_rule_target(tempTarg, strdup(line));
     }
-
     linelen = getline(&line, &bufsize, makefile);
   }
-  //execute here
+
+  //execute rules here by calling processline on each command line arg
   for (int i=1; i<argc; i++) {
-    for_each_rule(tempTarg, processline);
-    for_each_rule(tempTarg, print_name);
+    for_each_rule(find_target(argv[i]), processline);
   }
   free(line);
   return EXIT_SUCCESS;
@@ -91,10 +89,12 @@ int main(int argc, const char* argv[]) {
  and save the count of arguments.
  */
 void processline (char* line) {
-  int count;
-  char** args = arg_parse(line, &count);
+  char* copy = strdup(line); //create copy of line, gets freed below
 
-  if (count == 0)
+  int count;
+  char** args = arg_parse(copy, &count);
+
+  if (count == 0)// do nothing if no args
     return;
 
   const pid_t cpid = fork();
@@ -125,5 +125,6 @@ void processline (char* line) {
       break;
     }
   }
+  free(copy);
   free(args);
 }
