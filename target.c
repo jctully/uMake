@@ -6,11 +6,12 @@
 
 target_list global;
 
-//for debugging
+/* for debugging
 static void print_name(char* string) {
   printf("%s\n", string);
-}
-//list of strings of dependencies and rules, gets associated with a target
+}*/
+
+//list of strings for dependencies and rules, gets associated with a target
 struct stringList_st {
   stringList next;
   char* string;

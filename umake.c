@@ -15,9 +15,11 @@
 
 /* CONSTANTS */
 
+/* for debugging
 static void print_name(char* string) {
   printf("%s\n", string);
-}
+}*/
+
 /* PROTOTYPES */
 
 /* Process Line
