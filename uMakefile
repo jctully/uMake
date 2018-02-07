@@ -1,0 +1,12 @@
+umake: umake.o arg_parse.o target.o
+	rm umake
+	gcc -o umake umake.o arg_parse.o target.o
+
+umake.o: umake.c arg_parse.h target.h
+	gcc -c umake.c
+
+arg_parse.o: arg_parse.c arg_parse.h target.h
+	gcc -c arg_parse.c
+
+target.o: target.h
+	gcc -c target.c
