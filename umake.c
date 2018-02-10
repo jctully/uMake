@@ -29,6 +29,17 @@ static void print_name(char* string) {
  */
 void processline(char* line);
 
+/* Expand
+ * orig    The input string that may contain variables to be expanded
+ * new     An output buffer that will contain a copy of orig with all
+ *         variables expanded
+ * newsize The size of the buffer pointed to by new.
+ * returns 1 upon success or 0 upon failure.
+ *
+ * Example: "Hello, ${PLACE}" will expand to "Hello, World" when the environment
+ * variable PLACE="World".
+ */
+int expand(char* orig, char* new, int newsize);
 
 /* Main entry point.
  * argc    A count of command-line arguments
@@ -85,6 +96,63 @@ int main(int argc, char* argv[]) {
   return EXIT_SUCCESS;
 }
 
+int expand(char* orig, char* new, int newsize){
+  int pos; //holds position of safe string
+  int newpointer = 0;//holds position of iterator through new
+  char* substring = malloc(10 * sizeof(char*));
+
+  while (strchr(orig, '$')) {//while unparse string has more dollar signs
+    printf("starting while ============\n");
+    //find phrase to expand
+    char* dollarPos = 2+strstr(orig, "${") ;
+    pos = dollarPos - orig - 2;
+
+    //copying safe string into new
+    int j = 0;
+    while (j<pos)
+      new[newpointer++] = orig[j++];
+
+    printf("New = %s\n", new);
+
+    char* closeBrack = strchr(dollarPos, '}');
+
+    //save string to expand as substring
+    strncpy(substring, dollarPos, closeBrack - dollarPos);
+    printf("Found str to expand at index = %d\n", pos);
+    printf("%s -> ", substring);
+
+    //get expansion string
+    char* replace = getenv(substring);
+    if (!replace) {//handle unfound expansions
+      printf("failed to find expansion\n");
+      return 0;
+    }
+    printf("%s\n", replace);
+
+    //copying replacement phrase into new
+    int i = 0;
+    while (replace[i] != '\0')
+      new[newpointer++] = replace[i++];
+
+    printf("New after while = %s\n", new);
+
+    orig = closeBrack+1; //set orig to unparsed part of string
+    printf("Orig = %s\n", orig);
+    printf("New = %s\n", new);
+
+
+  }
+  //copying rest of orig into new
+  int i = 0;
+  while (orig[i] != '\0')
+    new[newpointer++] = orig[i++];
+
+  new[newpointer+1] = '\0';
+  printf("Final new = %s\n", new);
+
+  free(substring);
+  return 1;
+}
 
 /* Process Line
  * given a string line of text, process the arguments using arg_parse
@@ -93,8 +161,18 @@ int main(int argc, char* argv[]) {
 void processline (char* line) {
   char* copy = strdup(line); //create copy of line, gets freed below
 
+  //call expand
+  char* expansion = malloc(500 * sizeof(char*));
+  int newsize;
+  int expandSuccess = expand(copy, expansion, newsize);
+  if (expandSuccess == 0) {
+    printf("failed to expand\n");
+    return;
+  }
+
+
   int count;
-  char** args = arg_parse(copy, &count);
+  char** args = arg_parse(expansion, &count);
 
   if (count == 0)// do nothing if no args
     return;
