@@ -102,7 +102,7 @@ int expand(char* orig, char* new, int newsize){
   char* substring = malloc(10 * sizeof(char*));
 
   while (strchr(orig, '$')) {//while unparse string has more dollar signs
-    printf("starting while ============\n");
+    //printf("starting while ============\n");
     //find phrase to expand
     char* dollarPos = 2+strstr(orig, "${") ;
     pos = dollarPos - orig - 2;
@@ -112,14 +112,14 @@ int expand(char* orig, char* new, int newsize){
     while (j<pos)
       new[newpointer++] = orig[j++];
 
-    printf("New = %s\n", new);
+    //printf("New = %s\n", new);
 
     char* closeBrack = strchr(dollarPos, '}');
 
     //save string to expand as substring
     strncpy(substring, dollarPos, closeBrack - dollarPos);
-    printf("Found str to expand at index = %d\n", pos);
-    printf("%s -> ", substring);
+    //printf("Found str to expand at index = %d\n", pos);
+    //printf("%s -> ", substring);
 
     //get expansion string
     char* replace = getenv(substring);
@@ -127,18 +127,18 @@ int expand(char* orig, char* new, int newsize){
       printf("failed to find expansion\n");
       return 0;
     }
-    printf("%s\n", replace);
+    //printf("%s\n", replace);
 
     //copying replacement phrase into new
     int i = 0;
     while (replace[i] != '\0')
       new[newpointer++] = replace[i++];
 
-    printf("New after while = %s\n", new);
+    //printf("New after while = %s\n", new);
 
     orig = closeBrack+1; //set orig to unparsed part of string
-    printf("Orig = %s\n", orig);
-    printf("New = %s\n", new);
+    //printf("Orig = %s\n", orig);
+    //printf("New = %s\n", new);
 
 
   }
@@ -148,8 +148,9 @@ int expand(char* orig, char* new, int newsize){
     new[newpointer++] = orig[i++];
 
   new[newpointer+1] = '\0';
-  printf("Final new = %s\n", new);
+  //printf("Final new = %s\n", new);
 
+  newsize = strlen(new);
   free(substring);
   return 1;
 }
@@ -169,7 +170,6 @@ void processline (char* line) {
     printf("failed to expand\n");
     return;
   }
-
 
   int count;
   char** args = arg_parse(expansion, &count);
