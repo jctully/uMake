@@ -79,10 +79,18 @@ int main(int argc, char* argv[]) {
         for (int i=1; i<count; i++) //add dependencies for rest of line array
           add_depend_target(tempTarg, lineArgs[i]);
       }
+      if(strchr(line, '=') != NULL) {//line contains an equals sign
+        int count;
+        char* equal = strchr(line, '=');
+        equal[0] = ' '; //strip equals sign
+        char** lineArgs = arg_parse(line, &count);//split line into array
+        setenv(lineArgs[0], lineArgs[1], 1);//add environment variable
+      }
     }
 
     //case of tab character, want to add rules to the last target's list
     if(line[0] == '\t') {
+      //printf("adding rule\n");
       add_rule_target(tempTarg, strdup(line));
     }
     linelen = getline(&line, &bufsize, makefile);
@@ -105,6 +113,9 @@ int expand(char* orig, char* new, int newsize){
     //printf("starting while ============\n");
     //find phrase to expand
     char* dollarPos = 2+strstr(orig, "${") ;
+    //printf("Found str to expand at index = %d\n", pos);
+    //printf("dollarPos = %s\n", dollarPos);
+
     pos = dollarPos - orig - 2;
 
     //copying safe string into new
@@ -115,10 +126,14 @@ int expand(char* orig, char* new, int newsize){
     //printf("New = %s\n", new);
 
     char* closeBrack = strchr(dollarPos, '}');
+    size_t subLen = closeBrack - dollarPos;//length of string to substitute
+    //printf("len = %d\n", subLen);
 
     //save string to expand as substring
-    strncpy(substring, dollarPos, closeBrack - dollarPos);
-    //printf("Found str to expand at index = %d\n", pos);
+    strncpy(substring, dollarPos, subLen);
+
+    substring[subLen] = '\0';
+    //printf("substring = %s\n", substring);
     //printf("%s -> ", substring);
 
     //get expansion string
