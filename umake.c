@@ -70,16 +70,22 @@ int main(int argc, char* argv[]) {
     //case where no indent, want to add target to global list, then add in its dependencies
     if(line[0] != '\t') {
       if(strchr(line, ':') != NULL) {//line contains a colon
+        //printf("adding targ\n");
         int count;
         char* colon = strchr(line, ':');
         colon[0] = ' '; //strip colon
         char** lineArgs = arg_parse(line, &count);//split line into array
         tempTarg = new_target(lineArgs[0]);
 
-        for (int i=1; i<count; i++) //add dependencies for rest of line array
+        for (int i=1; i<count; i++) {//add dependencies for rest of line array
+        //printf("adding depend\n");
           add_depend_target(tempTarg, lineArgs[i]);
+}
+        //printf("done adding targ\n");
+
       }
       if(strchr(line, '=') != NULL) {//line contains an equals sign
+        //printf("adding env\n");
         int count;
         char* equal = strchr(line, '=');
         equal[0] = ' '; //strip equals sign
@@ -105,18 +111,19 @@ int main(int argc, char* argv[]) {
 }
 
 int expand(char* orig, char* new, int newsize){
+  //printf("expanding\n");
   int pos; //holds position of safe string
   int newpointer = 0;//holds position of iterator through new
-  char* substring = malloc(10 * sizeof(char*));
+  char* substring= malloc(10 * sizeof(char*));
 
-  while (strchr(orig, '$')) {//while unparse string has more dollar signs
+  while (strchr(orig, '$')) {//while unparsed string has more dollar signs
     //printf("starting while ============\n");
     //find phrase to expand
     char* dollarPos = 2+strstr(orig, "${") ;
     //printf("Found str to expand at index = %d\n", pos);
     //printf("dollarPos = %s\n", dollarPos);
 
-    pos = dollarPos - orig - 2;
+    pos = (dollarPos - orig) - 2;
 
     //copying safe string into new
     int j = 0;
@@ -129,7 +136,7 @@ int expand(char* orig, char* new, int newsize){
     size_t subLen = closeBrack - dollarPos;//length of string to substitute
     //printf("len = %d\n", subLen);
 
-    //save string to expand as substring
+    //save string to be expanded as substring
     strncpy(substring, dollarPos, subLen);
 
     substring[subLen] = '\0';
@@ -155,14 +162,13 @@ int expand(char* orig, char* new, int newsize){
     //printf("Orig = %s\n", orig);
     //printf("New = %s\n", new);
 
-
   }
   //copying rest of orig into new
   int i = 0;
   while (orig[i] != '\0')
     new[newpointer++] = orig[i++];
 
-  new[newpointer+1] = '\0';
+  new[newpointer] = '\0';
   //printf("Final new = %s\n", new);
 
   newsize = strlen(new);
@@ -178,13 +184,14 @@ void processline (char* line) {
   char* copy = strdup(line); //create copy of line, gets freed below
 
   //call expand
-  char* expansion = malloc(500 * sizeof(char*));
-  int newsize;
+  char expansion[1024];
+  int newsize = 1024;
   int expandSuccess = expand(copy, expansion, newsize);
   if (expandSuccess == 0) {
     printf("failed to expand\n");
     return;
   }
+  //printf("expansion = %s\n", expansion);
 
   int count;
   char** args = arg_parse(expansion, &count);

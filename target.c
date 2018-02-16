@@ -33,14 +33,15 @@ target* new_target(char* name) {
     char* copy = strdup(name);
     n->next = NULL;
     n->name = copy;
-
+    n->depend = NULL;
+    n->rules = NULL;
     target_list* list = &global;
     while(*list != NULL) {
       list = &((*list)->next);
     }
     *list = n;
-  }
 
+  }
   return n;
 }
 
@@ -60,14 +61,16 @@ target* find_target(char* name) {
 
 /* adds dependencies to a target's stringList of dependencies */
 void add_depend_target(target* tgt, char* depend) {
-  //printf("adding depend:  ");
-  stringList n = malloc(sizeof(node));
+  //printf("adding depend: %s \n", depend);
+
+  stringList n = malloc(sizeof(struct stringList_st));
   if(n != NULL) {
     n->next = NULL;
     n->string = depend;
-
     stringList* list = &(tgt->depend);
     while(*list != NULL) {
+      //printf("adding depend: %s \n", depend);
+
       list = &((*list)->next);
     }
     //printf("added\n");
@@ -78,7 +81,7 @@ void add_depend_target(target* tgt, char* depend) {
 /* adds a rule to a target's stringList of rules */
 void add_rule_target(target* tgt, char* rule) {
   //printf("adding rule:  ");
-  stringList n = malloc(sizeof(node));
+  stringList n = malloc(sizeof(struct stringList_st));
   if(n != NULL) {
     char* copy = strdup(rule);
     n->next = NULL;
