@@ -15,7 +15,7 @@
 
 /* CONSTANTS */
 
-/* for debugging
+ /*for debugging
 static void print_name(char* string) {
   printf("%s\n", string);
 }*/
@@ -41,6 +41,20 @@ void processline(char* line);
  */
 int expand(char* orig, char* new, int newsize);
 
+/* recursive_dependencies, given a target name from command line, find its dependencies
+and execute their rules in order. If a dependency has its own dependencies, execute
+those recursively. */
+void recursive_dependencies(char* name){
+  //printf("in recursive with target %s\n", name);
+  target* tgt = find_target(name);
+  if (tgt == NULL){
+    //printf("could not find\n");
+    return;
+  }
+  for_each_dependency(tgt, recursive_dependencies);
+  for_each_rule(tgt, processline);
+
+}
 /* Main entry point.
  * argc    A count of command-line arguments
  * argv    The command-line argument valus
@@ -100,11 +114,14 @@ int main(int argc, char* argv[]) {
       add_rule_target(tempTarg, strdup(line));
     }
     linelen = getline(&line, &bufsize, makefile);
-  }
 
-  //execute rules here by calling processline on each command line arg
+  }
+  //for_each_dependency(find_target("umake"), print_name);
+
+  //execute rules here by calling recursive_dependencies on each command line arg
   for (int i=1; i<argc; i++) {
-    for_each_rule(find_target(argv[i]), processline);
+    //for_each_dependency(find_target(umake), print_name);
+    recursive_dependencies(argv[i]);
   }
   free(line);
   return EXIT_SUCCESS;

@@ -61,21 +61,22 @@ target* find_target(char* name) {
 
 /* adds dependencies to a target's stringList of dependencies */
 void add_depend_target(target* tgt, char* depend) {
-  //printf("adding depend: %s \n", depend);
-
+  //printf("adding depend %s to target %s\n", depend, tgt->name);
+  char* copy = strdup(depend);
   stringList n = malloc(sizeof(struct stringList_st));
   if(n != NULL) {
     n->next = NULL;
-    n->string = depend;
+    n->string = copy;
     stringList* list = &(tgt->depend);
     while(*list != NULL) {
-      //printf("adding depend: %s \n", depend);
+      //printf("adding depend: %s \n", (*list)->string);
 
       list = &((*list)->next);
     }
     //printf("added\n");
     *list = n;
   }
+
 }
 
 /* adds a rule to a target's stringList of rules */
