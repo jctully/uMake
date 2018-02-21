@@ -131,7 +131,7 @@ int expand(char* orig, char* new, int newsize){
 
     //copying safe string into new
     int j = 0;
-    while (j<pos)
+    while (j<pos && strlen(new) < newsize)
       new[newpointer++] = orig[j++];
 
     char* closeBrack = strchr(dollarPos, '}');
@@ -151,7 +151,7 @@ int expand(char* orig, char* new, int newsize){
 
     //copying replacement phrase into new
     int i = 0;
-    while (replace[i] != '\0')
+    while (replace[i] != '\0' && strlen(new) < newsize)
       new[newpointer++] = replace[i++];
 
     orig = closeBrack+1; //set orig pointer to unparsed part of string
@@ -159,7 +159,7 @@ int expand(char* orig, char* new, int newsize){
   }
   //copying rest of orig into new
   int i = 0;
-  while (orig[i] != '\0')
+  while (orig[i] != '\0' && strlen(new) < newsize)
     new[newpointer++] = orig[i++];
 
   new[newpointer] = '\0';
@@ -176,7 +176,7 @@ void processline (char* line) {
   char* copy = strdup(line); //create copy of line, gets freed below
 
   //call expand
-  char expansion[1024];
+  char expansion[1024]; // <- change this value to change max size
   int newsize = 1024;
   int expandSuccess = expand(copy, expansion, newsize);
   if (expandSuccess == 0) {
