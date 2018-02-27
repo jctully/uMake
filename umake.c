@@ -60,6 +60,10 @@ void recursive_dependencies(char* name){
 int main(int argc, char* argv[]) {
 
   FILE* makefile = fopen("./uMakefile", "r");
+  if (makefile == NULL) {
+    fprintf(stderr, "no uMakefile, or unable to open.\n");
+    exit(EXIT_FAILURE);
+  }
 
   size_t  bufsize = 0;
   char*   line    = NULL;
