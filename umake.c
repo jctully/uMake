@@ -78,6 +78,10 @@ int main(int argc, char* argv[]) {
       line[linelen] = '\0';
     }
 
+    //remove comments
+    if(strchr(line, '#') != NULL)
+      *strchr(line, '#') = '\0';
+
     //case where no indent, want to add target to global list, then add in its dependencies
     if(line[0] != '\t') {
       if(strchr(line, ':') != NULL) {
