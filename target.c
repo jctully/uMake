@@ -109,8 +109,8 @@ void for_each_dependency(target* tgt, void(*action)(char*)) {
   }
 }
 
-//scans a target's dependency list and returns the time of its most recently
-// updated dependency as a time_t. called in recursive_dependencies
+/*scans a target's dependency list and returns the time of its most recently
+ updated dependency as a time_t. called in recursive_dependencies */
 time_t findNewestDepend(target* tgt) {
   time_t newestmod;
   stringList list = tgt->depend;
@@ -125,10 +125,10 @@ time_t findNewestDepend(target* tgt) {
   //compare newest mod time to rest of dependencies, updating if necessary
   list = list->next;
   while(list != NULL) {
-    struct stat fileStat1;
-    if (stat(list->string, &fileStat1) == 0)
-      if (fileStat1.st_mtime > newestmod)
-        newestmod = fileStat1.st_mtime;
+    struct stat fileStat2;
+    if (stat(list->string, &fileStat2) == 0)
+      if (fileStat2.st_mtime > newestmod)
+        newestmod = fileStat2.st_mtime;
     list = list->next;
   }
   //end of list

@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <fcntl.h>
 
 #include "arg_parse.h"
 #include "target.h"
@@ -41,15 +42,15 @@ int expand(char* orig, char* new, int newsize);
 
 
 /* recursive_dependencies, given a target name from command line,
-finds its dependencies and executes their rules in order.
-If a dependency has its own dependencies, execute those recursively. */
+comapre its modification time to its dependencies.
+If a dependency has its own dependencies, check those recursively. */
 void recursive_dependencies(char* name){
-  time_t targMod;
+  time_t targModTime;
   struct stat fileStat;
   if (stat(name, &fileStat) == 0)
-    targMod = fileStat.st_mtime;
+    targModTime = fileStat.st_mtime;
 
-  else {//stat call failed, file does not exist
+  else { //stat call failed, file does not exist
     target* tgt = find_target(name);
     if (tgt == NULL)
       return;
@@ -61,15 +62,15 @@ void recursive_dependencies(char* name){
   if (tgt == NULL)
     return;
 
-  //compare target to its newest dependency and its dependencies recursively
+  /*compare target to its newest dependency, and that dependency's dependencies
+  recursively. If one is updated, a chain reaction of updates will start. */
   time_t newestDepend = findNewestDepend(tgt);
-  if (targMod >= newestDepend) {
+  if (targModTime >= newestDepend) {
     for_each_dependency(tgt, recursive_dependencies);
     newestDepend = findNewestDepend(tgt);
-    if (targMod >= newestDepend)
+    if (targModTime >= newestDepend)
       return;
   }
-
   for_each_dependency(tgt, recursive_dependencies);
   for_each_rule(tgt, processline);
 }
@@ -203,6 +204,39 @@ int expand(char* orig, char* new, int newsize){
   free(substring);
   return 1;
 }
+/* given arg values, look for symbols that indicate to redirect input or output,
+  and perform operation by manipulating file descriptors. */
+char** IORedir(char** args) {
+  int file;
+  for (int i = 0; args[i] != '\0'; i++) {
+    //redirect input with fd0
+    if (strcmp(args[i], "<") == 0) {
+      args[i] = NULL;
+      char* filename = args[i+1];
+      file = open(filename, O_RDONLY, 0666);
+      dup2(file, 0);
+      close(file);
+    }
+    //redirect output, truncate with fd1
+    else if(strcmp(args[i], ">") == 0) {
+      args[i] = NULL;
+      char* filename = args[i+1];
+      file = open(filename, O_WRONLY | O_CREAT | O_TRUNC ,0666);
+      dup2(file, 1);
+      close(file);
+    }
+    //redirect output, append using fd1
+    else if(strcmp(args[i], ">>") == 0) {
+      args[i] = NULL;
+      char* filename = args[i+1];
+      file = open(filename, O_WRONLY | O_CREAT | O_APPEND ,0666);
+      dup2(file, 1);
+      close(file);
+    }
+  }
+  return args;
+}
+
 
 /* Process Line
  * given a string line of text, process the arguments using arg_parse
@@ -233,6 +267,7 @@ void processline (char* line) {
       }
 
       case 0: {
+        args = IORedir(args);
         execvp(args[0], args);
         perror("execvp");
         exit(EXIT_FAILURE);
