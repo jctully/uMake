@@ -9,6 +9,9 @@
 #include <sys/wait.h>
 #include <ctype.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
 
 #include "arg_parse.h"
 #include "target.h"
@@ -36,14 +39,37 @@ void processline(char* line);
  */
 int expand(char* orig, char* new, int newsize);
 
+
 /* recursive_dependencies, given a target name from command line,
 finds its dependencies and executes their rules in order.
 If a dependency has its own dependencies, execute those recursively. */
 void recursive_dependencies(char* name){
-  target* tgt = find_target(name);
-  if (tgt == NULL){
+  time_t targMod;
+  struct stat fileStat;
+  if (stat(name, &fileStat) == 0)
+    targMod = fileStat.st_mtime;
+
+  else {//stat call failed, file does not exist
+    target* tgt = find_target(name);
+    if (tgt == NULL)
+      return;
+    for_each_rule(tgt, processline);
     return;
   }
+
+  target* tgt = find_target(name);
+  if (tgt == NULL)
+    return;
+
+  //compare target to its newest dependency and its dependencies recursively
+  time_t newestDepend = findNewestDepend(tgt);
+  if (targMod >= newestDepend) {
+    for_each_dependency(tgt, recursive_dependencies);
+    newestDepend = findNewestDepend(tgt);
+    if (targMod >= newestDepend)
+      return;
+  }
+
   for_each_dependency(tgt, recursive_dependencies);
   for_each_rule(tgt, processline);
 }
@@ -118,6 +144,7 @@ int main(int argc, char* argv[]) {
   for (int i=1; i<argc; i++) {
     recursive_dependencies(argv[i]);
   }
+
   free(line);
   return EXIT_SUCCESS;
 }

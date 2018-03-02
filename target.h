@@ -1,7 +1,7 @@
 #ifndef _TARGET_H_
 #define _TARGET_H_
 #include <stdlib.h>
-
+//new comment
 //prototypes for target.c
 struct target_st;
 typedef struct target_st target;
@@ -24,5 +24,10 @@ void add_rule_target(target* tgt, char* rule);
 //used to recursively find target's dependencies and execute their rules.
 void for_each_rule(target* tgt, void(*action)(char*));
 void for_each_dependency(target* tgt, void(*action)(char*));
+
+//scans a target's dependency list and returns the time of its most recently
+// updated dependency as a time_t. called in recursive_dependencies
+time_t findNewestDepend(target* tgt);
+
 
 #endif

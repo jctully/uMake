@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <time.h>
+
 
 target_list global;
 
@@ -102,4 +107,30 @@ void for_each_dependency(target* tgt, void(*action)(char*)) {
     action(list->string);
     list = list->next;
   }
+}
+
+//scans a target's dependency list and returns the time of its most recently
+// updated dependency as a time_t. called in recursive_dependencies
+time_t findNewestDepend(target* tgt) {
+  time_t newestmod;
+  stringList list = tgt->depend;
+  if (list == NULL)
+    return 0;
+
+  //set newest mod time to first dependency
+  struct stat fileStat;
+  if (stat(list->string, &fileStat) == 0)
+    newestmod = fileStat.st_mtime;
+
+  //compare newest mod time to rest of dependencies, updating if necessary
+  list = list->next;
+  while(list != NULL) {
+    struct stat fileStat1;
+    if (stat(list->string, &fileStat1) == 0)
+      if (fileStat1.st_mtime > newestmod)
+        newestmod = fileStat1.st_mtime;
+    list = list->next;
+  }
+  //end of list
+  return newestmod;
 }
