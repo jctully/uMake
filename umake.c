@@ -50,29 +50,28 @@ void recursive_dependencies(char* name){
   if (stat(name, &fileStat) == 0)
     targModTime = fileStat.st_mtime;
 
-  else { //stat call failed, file does not exist
+  else {
     target* tgt = find_target(name);
-    if (tgt == NULL)
+    if (tgt != NULL) {
+      for_each_rule(tgt, processline);
       return;
-    for_each_rule(tgt, processline);
-    return;
+    }
   }
 
   target* tgt = find_target(name);
-  if (tgt == NULL)
-    return;
-
-  /*compare target to its newest dependency, and that dependency's dependencies
-  recursively. If one is updated, a chain reaction of updates will start. */
-  time_t newestDepend = findNewestDepend(tgt);
-  if (targModTime >= newestDepend) {
+  if (tgt != NULL) {
+    /*compare target to its newest dependency recursively.
+      If one is updated, a chain reaction of updates will start. */
+    time_t newestDepend = findNewestDepend(tgt);
+    if (targModTime >= newestDepend) {
+      for_each_dependency(tgt, recursive_dependencies);
+      newestDepend = findNewestDepend(tgt);
+      if (targModTime >= newestDepend)
+        return;
+    }
     for_each_dependency(tgt, recursive_dependencies);
-    newestDepend = findNewestDepend(tgt);
-    if (targModTime >= newestDepend)
-      return;
+    for_each_rule(tgt, processline);
   }
-  for_each_dependency(tgt, recursive_dependencies);
-  for_each_rule(tgt, processline);
 }
 
 /* Main entry point.
@@ -115,7 +114,7 @@ int main(int argc, char* argv[]) {
         int count;
         char* colon = strchr(line, ':');
         colon[0] = ' ';
-        char** lineArgs = arg_parse(line, &count);//split line into parts
+        char** lineArgs = arg_parse(line, &count);
         tempTarg = new_target(lineArgs[0]);
 
         for (int i=1; i<count; i++) {
@@ -171,7 +170,7 @@ int expand(char* orig, char* new, int newsize){
       new[newpointer++] = orig[j++];
 
     char* closeBrack = strchr(dollarPos, '}');
-    size_t subLen = closeBrack - dollarPos;//length of string to substitute
+    size_t subLen = closeBrack - dollarPos;
 
     //save string to be expanded as substring
     strncpy(substring, dollarPos, subLen);
@@ -180,18 +179,14 @@ int expand(char* orig, char* new, int newsize){
 
     //get expansion string
     char* replace = getenv(substring);
-    if (!replace) {
-      printf("failed to find expansion\n");
-      return 0;
+    if (replace) {
+      //copying replacement phrase into new
+      int i = 0;
+      while (replace[i] != '\0' && strlen(new) < newsize)
+        new[newpointer++] = replace[i++];
+
+      orig = closeBrack+1;
     }
-
-    //copying replacement phrase into new
-    int i = 0;
-    while (replace[i] != '\0' && strlen(new) < newsize)
-      new[newpointer++] = replace[i++];
-
-    orig = closeBrack+1; //set orig pointer to unparsed part of string
-
   }
   //copying rest of orig into new
   int i = 0;
@@ -217,7 +212,7 @@ char** IORedir(char** args) {
       dup2(file, 0);
       close(file);
     }
-    //redirect output, truncate with fd1
+    //redirect output, truncate using fd1
     else if(strcmp(args[i], ">") == 0) {
       args[i] = NULL;
       char* filename = args[i+1];
