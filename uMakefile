@@ -1,12 +1,16 @@
 umake: umake.o arg_parse.o target.o
 	rm umake
 	gcc -o umake umake.o arg_parse.o target.o
+	echo built umake
 
 umake.o: umake.c arg_parse.h target.h
 	gcc -c umake.c
+	echo built umake.o
 
 arg_parse.o: arg_parse.c arg_parse.h target.h
 	gcc -c arg_parse.c
+	echo built arg_parse.o
 
 target.o: target.h
 	gcc -c target.c
+	echo built target.o
